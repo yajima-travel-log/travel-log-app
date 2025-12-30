@@ -1,0 +1,69 @@
+body {
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+input, button {
+  display: block;
+  margin: 8px 0;
+}
+
+ul {
+  padding: 0;
+}
+
+li {
+  list-style: none;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deleteBtn {
+  background: #ff5c5c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.logStars {
+  color: #f5a623;
+  font-size: 18px;
+  margin: 6px 0;
+}
+
+.logPlace {
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.logMemo {
+  color: #555;
+  font-size: 14px;
+}
+
+.editBtn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+
+
+body {
+  background: #f5f6f8;
+}
+
+
+

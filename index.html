@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+  <meta charset="UTF-8">
+  <title>旅行ログ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>旅行ログ</h1>
+
+  <input id="place" placeholder="旅行先">
+<input id="startDate" type="date">
+<input id="endDate" type="date">
+  <input id="memo" placeholder="ひとこと感想">
+<select id="rating">
+  <option value="">評価</option>
+  <option value="1">★</option>
+  <option value="2">★★</option>
+  <option value="3">★★★</option>
+  <option value="4">★★★★</option>
+  <option value="5">★★★★★</option>
+</select>
+  <button id="addBtn">追加</button>
+
+<button id="sortNew">新しい順</button>
+<button id="sortOld">古い順</button>
+
+
+  <ul id="logList"></ul>
+
+
+
+
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
