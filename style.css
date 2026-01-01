@@ -524,3 +524,8 @@ body {
     flex: 1; /* 横幅を均等にしたい場合。不要なら消してOK */
   }
 }
+/* ===== ログ内のボタンは block 指定を打ち消す ===== */
+.logActions button {
+  display: inline-flex !important;
+  margin: 0 !important;
+}
