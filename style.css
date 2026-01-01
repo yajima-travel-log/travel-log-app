@@ -360,3 +360,32 @@ body {
   }
 }
 
+/* ===== 選択肢（option）をコンパクトにする ===== */
+#prefSelect,
+#countrySelect {
+  font-size: 13px;          /* ← 全体を少し小さく */
+}
+
+/* option 1行の高さを詰める */
+#prefSelect option,
+#countrySelect option {
+  padding: 4px 6px;         /* ← ここが一番効く */
+  line-height: 1.2;
+  font-size: 13px;
+}
+
+/* スマホではさらに詰める */
+@media (max-width: 600px) {
+  #prefSelect,
+  #countrySelect {
+    font-size: 12px;
+  }
+
+  #prefSelect option,
+  #countrySelect option {
+    padding: 2px 6px;
+    line-height: 1.15;
+    font-size: 12px;
+  }
+}
+
