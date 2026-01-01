@@ -1,5 +1,3 @@
-// ========= Stable script.js (replace whole file) =========
-
 document.addEventListener("DOMContentLoaded", () => {
   // ----- DOM -----
   const logList = document.getElementById("logList");
@@ -15,31 +13,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const world = document.getElementById("worldMapContainer");
 
-  // ない要素がある場合でも落ちないようにガード
   if (!logList) {
     console.error("logList が見つからない");
     return;
   }
 
   // ----- State -----
-  // これまで localStorage の visitedPrefs/visitedCountries を「選択状態」として使っていたので
-  // 互換のため、引き続き同じキーに「ユーザー選択」を保存します。
-  let selectedPrefs = new Set(JSON.parse(localStorage.getItem("visitedPrefs") || "[]"));
-  let selectedCountries = new Set(JSON.parse(localStorage.getItem("visitedCountries") || "[]"));
+  // セレクトで選んだ分（＝タグ表示対象）
+  let selectedPrefs = new Set();
+let selectedCountries = new Set();
+localStorage.removeItem("visitedPrefs");
+localStorage.removeItem("visitedCountries");
 
-  // ログに書かれている国/都道府県は「塗りっぱなし（ロック）」にする
+
+  // 地図を直接クリックして塗った分（＝タグ表示しない）
+  let paintedPrefs = new Set(JSON.parse(localStorage.getItem("paintedPrefs") || "[]"));
+  let paintedCountries = new Set(JSON.parse(localStorage.getItem("paintedCountries") || "[]"));
+
+  // ログに書かれている国/都道府県（＝塗りっぱなし）
   let lockedPrefs = new Set();
   let lockedCountries = new Set();
 
   // ----- Helpers -----
   const saveSelectedPrefs = () =>
     localStorage.setItem("visitedPrefs", JSON.stringify([...selectedPrefs]));
-
   const saveSelectedCountries = () =>
     localStorage.setItem("visitedCountries", JSON.stringify([...selectedCountries]));
 
-  const saveLogs = () =>
-    localStorage.setItem("travelLogs", logList.innerHTML);
+  const savePaintedPrefs = () =>
+    localStorage.setItem("paintedPrefs", JSON.stringify([...paintedPrefs]));
+  const savePaintedCountries = () =>
+    localStorage.setItem("paintedCountries", JSON.stringify([...paintedCountries]));
+
+  const saveLogs = () => localStorage.setItem("travelLogs", logList.innerHTML);
 
   function formatDate(dateStr) {
     const date = new Date(dateStr);
@@ -63,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function normalizeDataStartDateFromLogList() {
-    // travelLogs を innerHTML で復元したときに dataset が消えてるので補う
     logList.querySelectorAll("li").forEach((li) => {
       if (li.dataset.startDate) return;
       const dateText = li.querySelector(".logDate")?.textContent;
@@ -86,7 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     saveLogs();
   }
 
-  // label(表示名) -> value(コード) のMapを作る
   function buildTextToValueMap(selectEl) {
     const map = new Map();
     if (!selectEl) return map;
@@ -98,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return map;
   }
 
-  // ログ（タグ）からロック対象を再計算
   function recomputeLockedFromLogs() {
     lockedPrefs = new Set();
     lockedCountries = new Set();
@@ -119,19 +122,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 「塗る対象」＝ 選択 + ログロック
+  // 塗る対象 = セレクト選択 + 地図手塗り + ログロック
   function getPaintPrefs() {
-    return new Set([...selectedPrefs, ...lockedPrefs]);
+    return new Set([...selectedPrefs, ...paintedPrefs, ...lockedPrefs]);
   }
   function getPaintCountries() {
-    return new Set([...selectedCountries, ...lockedCountries]);
+    return new Set([...selectedCountries, ...paintedCountries, ...lockedCountries]);
   }
 
-  // ----- Render (maps + selects + tags) -----
+  // ----- Render -----
   function renderPrefMap() {
-    document
-      .querySelectorAll(".prefecture.visited")
-      .forEach((el) => el.classList.remove("visited"));
+    document.querySelectorAll(".prefecture.visited").forEach((el) => el.classList.remove("visited"));
 
     const paint = getPaintPrefs();
     paint.forEach((code) => {
@@ -146,27 +147,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const paint = getPaintCountries();
     paint.forEach((key) => {
-      world
-        .querySelectorAll(`path[data-country="${CSS.escape(key)}"]`)
-        .forEach((p) => p.classList.add("visited"));
+      world.querySelectorAll(`path[data-country="${CSS.escape(key)}"]`).forEach((p) => p.classList.add("visited"));
     });
   }
 
+  // selectは「セレクト選択」だけ同期（地図手塗りは反映しない）
   function syncPrefSelectFromSelected() {
     if (!prefSelect) return;
     Array.from(prefSelect.options).forEach((opt) => (opt.selected = selectedPrefs.has(opt.value)));
   }
-
   function syncCountrySelectFromSelected() {
     if (!countrySelect) return;
     Array.from(countrySelect.options).forEach((opt) => (opt.selected = selectedCountries.has(opt.value)));
   }
 
+  // タグも「セレクト選択」だけ表示（地図手塗りは表示しない）
   function renderPrefTags() {
     if (!selectedPrefsDiv || !prefSelect) return;
     selectedPrefsDiv.innerHTML = "";
-
-    // selectedPrefs の順序は任意なので、selectの並び順で表示
     Array.from(prefSelect.options).forEach((opt) => {
       if (!selectedPrefs.has(opt.value)) return;
       const tag = document.createElement("span");
@@ -175,11 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedPrefsDiv.appendChild(tag);
     });
   }
-
   function renderCountryTags() {
     if (!selectedCountriesDiv || !countrySelect) return;
     selectedCountriesDiv.innerHTML = "";
-
     Array.from(countrySelect.options).forEach((opt) => {
       if (!selectedCountries.has(opt.value)) return;
       const tag = document.createElement("span");
@@ -190,31 +186,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderAll() {
-    // 先に select を「ユーザー選択」に合わせる（ロックは選択に混ぜない）
     syncPrefSelectFromSelected();
     syncCountrySelectFromSelected();
-
-    // 次に地図（選択+ロック）を塗る
     renderPrefMap();
     renderWorldMap();
-
-    // タグはユーザー選択だけ
     renderPrefTags();
     renderCountryTags();
   }
 
   // ----- Init: restore logs -----
   const savedLogs = localStorage.getItem("travelLogs");
-  if (savedLogs) {
-    logList.innerHTML = savedLogs;
-  }
+  if (savedLogs) logList.innerHTML = savedLogs;
   normalizeDataStartDateFromLogList();
 
   // ----- Init: world paths data-country + select options -----
   function initWorldDataCountry() {
     if (!world) return;
-    const worldPaths = world.querySelectorAll("path");
-    worldPaths.forEach((p) => {
+    world.querySelectorAll("path").forEach((p) => {
       const key = p.getAttribute("name") || p.getAttribute("id") || p.getAttribute("class");
       if (!key) return;
       p.classList.add("country");
@@ -225,12 +213,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function initCountrySelectOptions() {
     if (!countrySelect || !world) return;
     countrySelect.innerHTML = "";
-
     const set = new Set();
     world.querySelectorAll("path.country").forEach((p) => {
       if (p.dataset.country) set.add(p.dataset.country);
     });
-
     [...set].sort().forEach((name) => {
       const opt = document.createElement("option");
       opt.value = name;
@@ -242,13 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function initPrefSelectOptions() {
     if (!prefSelect) return;
     prefSelect.innerHTML = "";
-
     document.querySelectorAll(".prefecture").forEach((pref) => {
       const code = pref.dataset.code;
       const title = pref.querySelector("title")?.textContent || "";
       const name = title.split("/")[0].trim();
       if (!code || !name) return;
-
       const opt = document.createElement("option");
       opt.value = code;
       opt.textContent = name;
@@ -260,13 +244,13 @@ document.addEventListener("DOMContentLoaded", () => {
   initCountrySelectOptions();
   initPrefSelectOptions();
 
-  // ログからロック再計算（options生成後じゃないと変換できない）
+  // options生成後にロック再計算
   recomputeLockedFromLogs();
 
   // 初回レンダー
   renderAll();
 
-  // ----- Events: prefecture map click -----
+  // ----- Events: prefecture map click（地図手塗りだけ更新） -----
   document.querySelectorAll(".prefecture path").forEach((path) => {
     path.addEventListener("click", () => {
       const pref = path.closest(".prefecture");
@@ -274,18 +258,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const code = pref.dataset.code;
       if (!code) return;
 
-      // ログ由来（ロック）なら、消せない（塗りっぱなし維持）
+      // ログ由来は消せない（塗りっぱなし）
       if (lockedPrefs.has(code)) return;
 
-      if (selectedPrefs.has(code)) selectedPrefs.delete(code);
-      else selectedPrefs.add(code);
+      // 地図手塗りのトグル（selectedは触らない）
+      if (paintedPrefs.has(code)) paintedPrefs.delete(code);
+      else paintedPrefs.add(code);
 
-      saveSelectedPrefs();
+      savePaintedPrefs();
       renderAll();
     });
   });
 
-  // ----- Events: world map click -----
+  // ----- Events: world map click（地図手塗りだけ更新） -----
   if (world) {
     world.addEventListener("click", (e) => {
       const path = e.target.closest("path.country");
@@ -295,18 +280,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (lockedCountries.has(key)) return;
 
-      if (selectedCountries.has(key)) selectedCountries.delete(key);
-      else selectedCountries.add(key);
+      if (paintedCountries.has(key)) paintedCountries.delete(key);
+      else paintedCountries.add(key);
 
-      saveSelectedCountries();
+      savePaintedCountries();
       renderAll();
     });
   }
 
-  // ----- Events: selects change -----
+  // ----- Events: selects change（selectedだけ更新） -----
   if (prefSelect) {
     prefSelect.addEventListener("change", () => {
-      // ユーザー選択のみ更新（ロックは混ぜない）
       selectedPrefs = new Set(Array.from(prefSelect.selectedOptions).map((o) => o.value));
       saveSelectedPrefs();
       renderAll();
@@ -336,12 +320,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const selectedPrefCodes = prefSelect
-        ? Array.from(prefSelect.selectedOptions).map((o) => o.value)
-        : [];
-      const selectedCountryCodes = countrySelect
-        ? Array.from(countrySelect.selectedOptions).map((o) => o.value)
-        : [];
+      const selectedPrefCodes = prefSelect ? Array.from(prefSelect.selectedOptions).map((o) => o.value) : [];
+      const selectedCountryCodes = countrySelect ? Array.from(countrySelect.selectedOptions).map((o) => o.value) : [];
 
       const prefTagsHtml = selectedPrefCodes
         .map((code) => {
@@ -388,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logList.appendChild(li);
       saveLogs();
 
-      // ログが増えたのでロック再計算 → 地図を塗る
+      // ログ追加 → ロック再計算 → 塗り更新
       recomputeLockedFromLogs();
       renderAll();
     });
@@ -398,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
   logList.addEventListener("click", (e) => {
     const target = e.target;
 
-    // 編集（タグは編集しない想定）
     if (target.classList.contains("editBtn")) {
       const li = target.closest("li");
       if (!li) return;
@@ -423,13 +402,13 @@ document.addEventListener("DOMContentLoaded", () => {
       saveLogs();
     }
 
-    // 削除（削除したらロック再計算）
     if (target.classList.contains("deleteBtn")) {
       const li = target.closest("li");
       if (!li) return;
       li.remove();
       saveLogs();
 
+      // ログ削除 → ロック再計算
       recomputeLockedFromLogs();
       renderAll();
     }
@@ -439,5 +418,5 @@ document.addEventListener("DOMContentLoaded", () => {
   sortNewBtn?.addEventListener("click", () => sortLogsByDate(true));
   sortOldBtn?.addEventListener("click", () => sortLogsByDate(false));
 
-  console.log("✅ script.js loaded (stable + log-locked maps)");
+  console.log("✅ script.js loaded (map paint does NOT affect select/tags)");
 });
