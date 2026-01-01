@@ -411,3 +411,17 @@ body {
   margin-top: 6px;
   margin-bottom: 6px;
 }
+
+@media (max-width: 600px) {
+  #prefSelect,
+  #countrySelect {
+    font-size: 14px;
+  }
+
+  /* iPhoneでムダにデカく見える時の保険 */
+  #prefSelect option,
+  #countrySelect option {
+    padding: 2px 6px;
+  }
+}
+
