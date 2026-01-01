@@ -511,3 +511,16 @@ body {
     flex: 1; /* 横幅を均等にしたい場合。不要なら消してOK */
   }
 }
+/* ===== スマホでも編集・削除ボタンを横並びにする ===== */
+@media (max-width: 600px) {
+  .logActions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px;
+  }
+
+  .logActions button {
+    width: auto !important;
+    flex: 1; /* 横幅を均等にしたい場合。不要なら消してOK */
+  }
+}
