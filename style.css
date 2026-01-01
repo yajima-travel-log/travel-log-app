@@ -424,12 +424,7 @@ body {
     padding: 2px 6px;
   }
 }
-@media (max-width: 600px) {
-  #countrySelect,
-  #prefSelect {
-    display: none;
-  }
-}
+
 /* ===== 日本地図・世界地図を同じ大きさに揃える ===== */
 #japanMapContainer,
 #worldMapContainer {
