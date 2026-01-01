@@ -485,3 +485,15 @@ body {
   transform: scale(1.3);      /* ← ここを調整（1.2〜1.5） */
   transform-origin: center;   /* 中央基準で拡大 */
 }
+/* ===== スマホで select が消えるのを強制的に復活させる ===== */
+@media (max-width: 600px) {
+  #prefSelect,
+  #countrySelect {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    height: auto !important;
+    min-height: 44px !important; /* iOS最低タップサイズ */
+  }
+}
