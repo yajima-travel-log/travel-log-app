@@ -475,3 +475,18 @@ body {
   transform-origin: center;   /* 中央基準で拡大 */
 }
 
+/* ===== 世界地図を大きく表示する ===== */
+#worldMapContainer {
+  max-width: 600px;   /* 日本地図と同じ基準 */
+  margin: 0 auto 24px;
+}
+
+/* 世界地図だけ拡大 */
+#worldMapContainer svg {
+  width: 100%;
+  height: auto;
+  display: block;
+
+  transform: scale(1.3);      /* ← ここを調整（1.2〜1.5） */
+  transform-origin: center;   /* 中央基準で拡大 */
+}
