@@ -407,3 +407,7 @@ body {
     min-height: 20px;
   }
 }
+.formGroup select {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
