@@ -389,3 +389,21 @@ body {
   }
 }
 
+/* ===== 選択欄（表示されている枠）をコンパクトに ===== */
+#prefSelect,
+#countrySelect {
+  padding: 6px 10px;     /* ← 枠内の余白を減らす */
+  font-size: 14px;       /* ← 文字を少し小さく */
+  line-height: 1.3;      /* ← 行の高さを詰める */
+  min-height: 44px;      /* ← iOSの最低タップサイズだけ確保 */
+  height: auto;          /* ← 不要な高さ固定を解除 */
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  #prefSelect,
+  #countrySelect {
+    padding: 4px 8px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
