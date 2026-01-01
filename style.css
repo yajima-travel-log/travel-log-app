@@ -404,6 +404,6 @@ body {
   #countrySelect {
     padding: 4px 8px;
     font-size: 13px;
-    min-height: 40px;
+    min-height: 20px;
   }
 }
