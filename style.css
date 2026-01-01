@@ -59,10 +59,234 @@ li {
   margin-right: 6px;
 }
 
+.geolonia-svg-map { width: 100%; height: auto; }
 
+.prefecture {
+  fill: #e0e0e0;
+  stroke: #fff;
+}
+
+.prefecture.visited {
+  fill: #4a90e2;
+}
+
+#prefSelect {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+
+  padding: 8px;
+  font-size: 14px;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  background-color: #fafafa;
+}
+
+#prefSelect option {
+  padding: 6px;
+}
+
+#prefSelect option:checked {
+  background-color: #4a90e2;
+  color: #fff;
+}
+
+#selectedPrefs {
+  margin-top: 8px;
+}
+
+
+#worldMapContainer svg {
+  width: 100%;
+  max-width: 800px;
+}
+
+.country.visited {
+  fill: #4caf50;
+}
+
+
+.logDate {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.logPlace {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.formCard {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  margin-bottom: 32px;
+  max-width: 600px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.formGroup label {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.formGroup input,
+.formGroup select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76,175,80,0.15);
+}
+
+.primaryBtn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #4caf50, #43a047);
+  color: #fff;
+
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(76,175,80,0.35);
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(76,175,80,0.45);
+}
+
+.primaryBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(76,175,80,0.3);
+}
+
+.formGroup select {
+  margin-top: 8px;
+}
+
+.multiSelect {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  min-height: 44px;
+  background: #fff;
+}
+
+.multiSelect:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76,175,80,0.15);
+}
+
+.sortButtons {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.sortBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sortBtn:hover {
+  background: #f0f0f0;
+}
+
+
+
+
+.multiSelect option:checked {
+  background-color: #4a90e2;
+  color: #fff;
+}
 
 body {
   background: #f5f6f8;
+}
+
+/* ===== Select（国・都道府県）を同じ見た目に統一 ===== */
+#prefSelect,
+#countrySelect {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+  min-height: 44px;
+}
+
+/* 都道府県 select は HTMLで size="10" なので高さが大きめでもOK。
+   国も同じように見せたいなら size を付けてもOK（CSS側は共通のまま） */
+
+/* 選択中の option を青に（国・都道府県どっちも） */
+#prefSelect option:checked,
+#countrySelect option:checked {
+  background-color: #4a90e2;
+  color: #fff;
+}
+
+/* ===== 地図の「訪問済み」も青に統一 ===== */
+/* 都道府県はすでに青だけど念のためそのまま */
+.prefecture.visited {
+  fill: #4a90e2;
+}
+
+/* 国が今は緑なので、青に変更 */
+.country.visited {
+  fill: #4a90e2;
+}
+
+/* ===== タグも青くして見やすく（任意だけどおすすめ） ===== */
+.prefTag,
+.countryTag {
+  display: inline-block;
+  margin: 4px 6px 0 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #4a90e2;
+  color: #fff;
+  font-size: 12px;
+}
+
+/* ===== 都道府県・国セレクトを同じ高さにする ===== */
+#prefSelect,
+#countrySelect {
+  height: 220px;        /* ← 好きな高さに微調整OK */
+  overflow-y: auto;     /* 中身が多いとスクロール */
+  box-sizing: border-box;
 }
 
 
