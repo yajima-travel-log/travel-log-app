@@ -289,5 +289,55 @@ body {
   box-sizing: border-box;
 }
 
+/* ===== 1) 入力エリア～ログまでの幅を統一 ===== */
+/* formCard は max-width:600px なので、それに合わせて他も揃える */
+.formCard,
+.formGroup,
+.sortButtons,
+#logList {
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* ログ（li）が幅100%で収まるように */
+#logList {
+  padding: 0;
+  margin-top: 12px;
+}
+
+#logList > li {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== 2) 都道府県/国の選択欄（multiple）の高さを揃えて短くする ===== */
+#prefSelect,
+#countrySelect {
+  height: 200px;     /* ← まずはPC基準。長ければ 160〜220 で調整 */
+  overflow-y: auto;
+}
+
+/* ===== 3) スマホではさらに短く（ここが「長くて変」を解消するメイン） ===== */
+@media (max-width: 600px) {
+  body {
+    padding: 14px;   /* 余白ちょい減らすと詰まりにくい */
+  }
+
+  #prefSelect,
+  #countrySelect {
+    height: 140px;   /* ← スマホはこのくらいが気持ちいい */
+  }
+
+  .sortButtons {
+    gap: 10px;
+  }
+
+  .sortBtn {
+    flex: 1;         /* ボタンを横並びで同じ幅に */
+  }
+}
 
 
