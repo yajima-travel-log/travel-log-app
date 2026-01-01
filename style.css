@@ -524,8 +524,8 @@ body {
     flex: 1; /* 横幅を均等にしたい場合。不要なら消してOK */
   }
 }
-/* ===== ログ内のボタンは block 指定を打ち消す ===== */
+
+/* ===== ボタン内の文字を折り返さない ===== */
 .logActions button {
-  display: inline-flex !important;
-  margin: 0 !important;
+  white-space: nowrap;
 }
