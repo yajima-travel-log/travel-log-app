@@ -21,16 +21,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ----- State (single source of truth) -----
-  let visitedPrefs = new Set(JSON.parse(localStorage.getItem("visitedPrefs") || "[]"));
-  let visitedCountries = new Set(JSON.parse(localStorage.getItem("visitedCountries") || "[]"));
+  // ----- State -----
+  // これまで localStorage の visitedPrefs/visitedCountries を「選択状態」として使っていたので
+  // 互換のため、引き続き同じキーに「ユーザー選択」を保存します。
+  let selectedPrefs = new Set(JSON.parse(localStorage.getItem("visitedPrefs") || "[]"));
+  let selectedCountries = new Set(JSON.parse(localStorage.getItem("visitedCountries") || "[]"));
+
+  // ログに書かれている国/都道府県は「塗りっぱなし（ロック）」にする
+  let lockedPrefs = new Set();
+  let lockedCountries = new Set();
 
   // ----- Helpers -----
-  const saveVisitedPrefs = () =>
-    localStorage.setItem("visitedPrefs", JSON.stringify([...visitedPrefs]));
+  const saveSelectedPrefs = () =>
+    localStorage.setItem("visitedPrefs", JSON.stringify([...selectedPrefs]));
 
-  const saveVisitedCountries = () =>
-    localStorage.setItem("visitedCountries", JSON.stringify([...visitedCountries]));
+  const saveSelectedCountries = () =>
+    localStorage.setItem("visitedCountries", JSON.stringify([...selectedCountries]));
 
   const saveLogs = () =>
     localStorage.setItem("travelLogs", logList.innerHTML);
@@ -80,10 +86,55 @@ document.addEventListener("DOMContentLoaded", () => {
     saveLogs();
   }
 
+  // label(表示名) -> value(コード) のMapを作る
+  function buildTextToValueMap(selectEl) {
+    const map = new Map();
+    if (!selectEl) return map;
+    Array.from(selectEl.options).forEach((opt) => {
+      const label = (opt.textContent || "").trim();
+      if (!label) return;
+      map.set(label, opt.value);
+    });
+    return map;
+  }
+
+  // ログ（タグ）からロック対象を再計算
+  function recomputeLockedFromLogs() {
+    lockedPrefs = new Set();
+    lockedCountries = new Set();
+
+    const prefMap = buildTextToValueMap(prefSelect);
+    const countryMap = buildTextToValueMap(countrySelect);
+
+    logList.querySelectorAll(".logPrefs .prefTag").forEach((tag) => {
+      const label = (tag.textContent || "").trim();
+      const code = prefMap.get(label);
+      if (code) lockedPrefs.add(code);
+    });
+
+    logList.querySelectorAll(".logCountries .countryTag").forEach((tag) => {
+      const label = (tag.textContent || "").trim();
+      const key = countryMap.get(label);
+      if (key) lockedCountries.add(key);
+    });
+  }
+
+  // 「塗る対象」＝ 選択 + ログロック
+  function getPaintPrefs() {
+    return new Set([...selectedPrefs, ...lockedPrefs]);
+  }
+  function getPaintCountries() {
+    return new Set([...selectedCountries, ...lockedCountries]);
+  }
+
   // ----- Render (maps + selects + tags) -----
   function renderPrefMap() {
-    document.querySelectorAll(".prefecture.visited").forEach((el) => el.classList.remove("visited"));
-    visitedPrefs.forEach((code) => {
+    document
+      .querySelectorAll(".prefecture.visited")
+      .forEach((el) => el.classList.remove("visited"));
+
+    const paint = getPaintPrefs();
+    paint.forEach((code) => {
       const pref = document.querySelector(`.prefecture[data-code="${CSS.escape(code)}"]`);
       if (pref) pref.classList.add("visited");
     });
@@ -92,17 +143,32 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderWorldMap() {
     if (!world) return;
     world.querySelectorAll("path.country.visited").forEach((p) => p.classList.remove("visited"));
-    visitedCountries.forEach((key) => {
+
+    const paint = getPaintCountries();
+    paint.forEach((key) => {
       world
         .querySelectorAll(`path[data-country="${CSS.escape(key)}"]`)
         .forEach((p) => p.classList.add("visited"));
     });
   }
 
+  function syncPrefSelectFromSelected() {
+    if (!prefSelect) return;
+    Array.from(prefSelect.options).forEach((opt) => (opt.selected = selectedPrefs.has(opt.value)));
+  }
+
+  function syncCountrySelectFromSelected() {
+    if (!countrySelect) return;
+    Array.from(countrySelect.options).forEach((opt) => (opt.selected = selectedCountries.has(opt.value)));
+  }
+
   function renderPrefTags() {
     if (!selectedPrefsDiv || !prefSelect) return;
     selectedPrefsDiv.innerHTML = "";
-    Array.from(prefSelect.selectedOptions).forEach((opt) => {
+
+    // selectedPrefs の順序は任意なので、selectの並び順で表示
+    Array.from(prefSelect.options).forEach((opt) => {
+      if (!selectedPrefs.has(opt.value)) return;
       const tag = document.createElement("span");
       tag.className = "prefTag";
       tag.textContent = opt.textContent;
@@ -113,7 +179,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderCountryTags() {
     if (!selectedCountriesDiv || !countrySelect) return;
     selectedCountriesDiv.innerHTML = "";
-    Array.from(countrySelect.selectedOptions).forEach((opt) => {
+
+    Array.from(countrySelect.options).forEach((opt) => {
+      if (!selectedCountries.has(opt.value)) return;
       const tag = document.createElement("span");
       tag.className = "countryTag";
       tag.textContent = opt.textContent;
@@ -121,21 +189,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function syncPrefSelectFromState() {
-    if (!prefSelect) return;
-    Array.from(prefSelect.options).forEach((opt) => (opt.selected = visitedPrefs.has(opt.value)));
-  }
-
-  function syncCountrySelectFromState() {
-    if (!countrySelect) return;
-    Array.from(countrySelect.options).forEach((opt) => (opt.selected = visitedCountries.has(opt.value)));
-  }
-
   function renderAll() {
+    // 先に select を「ユーザー選択」に合わせる（ロックは選択に混ぜない）
+    syncPrefSelectFromSelected();
+    syncCountrySelectFromSelected();
+
+    // 次に地図（選択+ロック）を塗る
     renderPrefMap();
     renderWorldMap();
-    syncPrefSelectFromState();
-    syncCountrySelectFromState();
+
+    // タグはユーザー選択だけ
     renderPrefTags();
     renderCountryTags();
   }
@@ -176,7 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ----- Init: pref select options -----
   function initPrefSelectOptions() {
     if (!prefSelect) return;
     prefSelect.innerHTML = "";
@@ -198,6 +260,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initCountrySelectOptions();
   initPrefSelectOptions();
 
+  // ログからロック再計算（options生成後じゃないと変換できない）
+  recomputeLockedFromLogs();
+
   // 初回レンダー
   renderAll();
 
@@ -209,10 +274,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const code = pref.dataset.code;
       if (!code) return;
 
-      if (visitedPrefs.has(code)) visitedPrefs.delete(code);
-      else visitedPrefs.add(code);
+      // ログ由来（ロック）なら、消せない（塗りっぱなし維持）
+      if (lockedPrefs.has(code)) return;
 
-      saveVisitedPrefs();
+      if (selectedPrefs.has(code)) selectedPrefs.delete(code);
+      else selectedPrefs.add(code);
+
+      saveSelectedPrefs();
       renderAll();
     });
   });
@@ -225,10 +293,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const key = path.dataset.country;
       if (!key) return;
 
-      if (visitedCountries.has(key)) visitedCountries.delete(key);
-      else visitedCountries.add(key);
+      if (lockedCountries.has(key)) return;
 
-      saveVisitedCountries();
+      if (selectedCountries.has(key)) selectedCountries.delete(key);
+      else selectedCountries.add(key);
+
+      saveSelectedCountries();
       renderAll();
     });
   }
@@ -236,16 +306,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----- Events: selects change -----
   if (prefSelect) {
     prefSelect.addEventListener("change", () => {
-      visitedPrefs = new Set(Array.from(prefSelect.selectedOptions).map((o) => o.value));
-      saveVisitedPrefs();
+      // ユーザー選択のみ更新（ロックは混ぜない）
+      selectedPrefs = new Set(Array.from(prefSelect.selectedOptions).map((o) => o.value));
+      saveSelectedPrefs();
       renderAll();
     });
   }
 
   if (countrySelect) {
     countrySelect.addEventListener("change", () => {
-      visitedCountries = new Set(Array.from(countrySelect.selectedOptions).map((o) => o.value));
-      saveVisitedCountries();
+      selectedCountries = new Set(Array.from(countrySelect.selectedOptions).map((o) => o.value));
+      saveSelectedCountries();
       renderAll();
     });
   }
@@ -317,11 +388,8 @@ document.addEventListener("DOMContentLoaded", () => {
       logList.appendChild(li);
       saveLogs();
 
-      // 選択された都道府県/国を visited にも反映（＝地図も塗れる）
-      selectedPrefCodes.forEach((c) => visitedPrefs.add(c));
-      selectedCountryCodes.forEach((c) => visitedCountries.add(c));
-      saveVisitedPrefs();
-      saveVisitedCountries();
+      // ログが増えたのでロック再計算 → 地図を塗る
+      recomputeLockedFromLogs();
       renderAll();
     });
   }
@@ -330,7 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
   logList.addEventListener("click", (e) => {
     const target = e.target;
 
-    // 編集
+    // 編集（タグは編集しない想定）
     if (target.classList.contains("editBtn")) {
       const li = target.closest("li");
       if (!li) return;
@@ -355,12 +423,15 @@ document.addEventListener("DOMContentLoaded", () => {
       saveLogs();
     }
 
-    // 削除
+    // 削除（削除したらロック再計算）
     if (target.classList.contains("deleteBtn")) {
       const li = target.closest("li");
       if (!li) return;
       li.remove();
       saveLogs();
+
+      recomputeLockedFromLogs();
+      renderAll();
     }
   });
 
@@ -368,5 +439,5 @@ document.addEventListener("DOMContentLoaded", () => {
   sortNewBtn?.addEventListener("click", () => sortLogsByDate(true));
   sortOldBtn?.addEventListener("click", () => sortLogsByDate(false));
 
-  console.log("✅ script.js loaded (stable)");
+  console.log("✅ script.js loaded (stable + log-locked maps)");
 });
