@@ -340,4 +340,23 @@ body {
   }
 }
 
+/* ===== Selectの高さを強制的に揃える（最後に置く） ===== */
+#prefSelect,
+#countrySelect {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+
+  height: 200px !important;   /* ← PC基準。好みで 160〜220 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* スマホでは短く */
+@media (max-width: 600px) {
+  #prefSelect,
+  #countrySelect {
+    height: 140px !important; /* ← スマホ基準。好みで 120〜160 */
+  }
+}
 
